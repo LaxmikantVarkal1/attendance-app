@@ -36,14 +36,6 @@ export default function TabTwoScreen() {
   const [isSubjectDrawerOpen, setIsSubjectDrawerOpen] = useState(false);
   const [customSubjectName, setCustomSubjectName] = useState('');
 
-  const displayDate = date
-    ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : 'Select date';
-
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -64,8 +56,17 @@ export default function TabTwoScreen() {
   );
 
   const selectSubject = (nextSubjectName: string) => {
-    updateForm('subjectName', nextSubjectName.trim());
-    setCustomSubjectName(nextSubjectName.trim());
+    const trimmedName = nextSubjectName.trim();
+    const existingSubject = subjects.find((subject) => subject.subjectName === trimmedName);
+
+    updateForm('subjectName', trimmedName);
+    updateForm('subjectRangeLocked', Boolean(existingSubject));
+    if (existingSubject) {
+      updateForm('from', existingSubject.from);
+      updateForm('to', existingSubject.to);
+    }
+
+    setCustomSubjectName(trimmedName);
     setIsSubjectDrawerOpen(false);
   };
 
@@ -74,6 +75,15 @@ export default function TabTwoScreen() {
 
     if (!nextSubjectName) {
       Alert.alert('Missing subject', 'Enter a subject name or choose one from the list.');
+      return;
+    }
+
+    const existingSubject = subjects.find((subject) => subject.subjectName === nextSubjectName);
+    updateForm('subjectRangeLocked', Boolean(existingSubject));
+    if (!existingSubject) {
+      updateForm('subjectName', nextSubjectName);
+      setCustomSubjectName(nextSubjectName);
+      setIsSubjectDrawerOpen(false);
       return;
     }
 
@@ -117,6 +127,8 @@ export default function TabTwoScreen() {
         subjectName: trimmedSubjectName,
         date: String(date),
         time: String(time),
+        from: Number(useFormData.getState().formData.from),
+        to: Number(useFormData.getState().formData.to),
         present: Number(present),
         total: Number(total),
       });

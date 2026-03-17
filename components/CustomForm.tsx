@@ -17,6 +17,7 @@ type FormField = {
   maxFromKey?: string;
   placeholder?: string;
   options?: { label: string; value: string | number }[];
+  disabled?: boolean;
 };
 
 export default function CustomForm() {
@@ -82,6 +83,7 @@ export default function CustomForm() {
   const formValues = useFormData((state:any)=>(state.formData));
   const setFormValues = useFormData((state:any)=>(state.updateForm))
   const formErrors: Record<string, string> = {};
+  const subjectRangeLocked = Boolean(formValues.subjectRangeLocked);
 
   const getNumericValue = (value: string | number) => {
     if (value === '') {
@@ -129,6 +131,7 @@ export default function CustomForm() {
             options={field.options}
             min={getFieldLimits(field).min}
             max={getFieldLimits(field).max}
+            disabled={subjectRangeLocked && (field.valueKey === 'from' || field.valueKey === 'to')}
             error={formErrors[field.valueKey]}
             onChange={(value) => handleInputChange(field.valueKey, value)}
           />

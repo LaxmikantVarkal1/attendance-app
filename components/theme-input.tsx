@@ -34,6 +34,7 @@ export type DynamicInputProps = {
     placeholder?: string;
     options?: DynamicOption[];
     error?: string;
+    disabled?: boolean;
 };
 
 export default function DynamicInput({
@@ -47,6 +48,7 @@ export default function DynamicInput({
     placeholder,
     options = [],
     error,
+    disabled = false,
 }: DynamicInputProps) {
     const theme = useColorScheme() ?? 'light';
     const [isSelectOpen, setIsSelectOpen] = useState(false);
@@ -125,9 +127,14 @@ export default function DynamicInput({
                     <Pressable
                         style={[
                             styles.inputContainer,
+                            disabled ? styles.disabledInput : null,
                             { borderColor: error ? '#dc2626' : Colors[theme].lightBG },
                         ]}
-                        onPress={() => setIsSelectOpen(true)}>
+                        onPress={() => {
+                            if (!disabled) {
+                                setIsSelectOpen(true);
+                            }
+                        }}>
                         <ThemedText style={styles.inputText}>
                             {selectedLabel || placeholder || `Select ${label}`}
                         </ThemedText>
@@ -160,10 +167,12 @@ export default function DynamicInput({
                     value={value === '' ? '' : String(value)}
                     onChangeText={handleTextChange}
                     keyboardType={'default'}
+                    editable={!disabled}
                     placeholder={placeholder || `Enter ${label}`}
                     placeholderTextColor={Colors[theme].icon}
                     style={[
                         styles.inputContainer,
+                        disabled ? styles.disabledInput : null,
                         {
                             borderColor: error ? '#dc2626' : Colors[theme].lightBG,
                             color: Colors[theme].text,
@@ -173,17 +182,23 @@ export default function DynamicInput({
             case 'number':
                 return <ThemedView style={[styles.row]}>
 
-                    <IconButton style={{background:Colors[theme].prime}} isLabel={false} onPress={() => onChange(clampNumber(Number(value || 0) - 1))}>
+                    <IconButton style={{background:Colors[theme].prime, opacity: disabled ? 0.5 : 1}} isLabel={false} onPress={() => {
+                        if (!disabled) {
+                            onChange(clampNumber(Number(value || 0) - 1));
+                        }
+                    }}>
                         <Minus size={20} color={Colors[theme].icon} />
                     </IconButton>
                     <TextInput
                         value={value === '' ? '' : String(value)}
                         onChangeText={handleTextChange}
                         keyboardType={'numeric'}
+                        editable={!disabled}
                         placeholder={placeholder || `Enter ${label}`}
                         placeholderTextColor={Colors[theme].icon}
                         style={[
                             styles.inputContainer,
+                            disabled ? styles.disabledInput : null,
                             {
                                 borderColor: error ? '#dc2626' : Colors[theme].lightBG,
                                 color: Colors[theme].text,
@@ -192,7 +207,11 @@ export default function DynamicInput({
                             },
                         ]}
                     />
-                     <IconButton style={{background:Colors[theme].prime}} isLabel={false} onPress={() => onChange(clampNumber(Number(value || 0) + 1))}>
+                     <IconButton style={{background:Colors[theme].prime, opacity: disabled ? 0.5 : 1}} isLabel={false} onPress={() => {
+                        if (!disabled) {
+                            onChange(clampNumber(Number(value || 0) + 1));
+                        }
+                    }}>
                         <Plus color={Colors[theme].icon} size={20} />
                     </IconButton>
                     
@@ -204,9 +223,14 @@ export default function DynamicInput({
                         style={[
                             styles.inputContainer,
                             styles.pickerTrigger,
+                            disabled ? styles.disabledInput : null,
                             { borderColor: error ? '#dc2626' : Colors[theme].lightBG },
                         ]}
-                        onPress={() => setIsDatePickerOpen(true)}>
+                        onPress={() => {
+                            if (!disabled) {
+                                setIsDatePickerOpen(true);
+                            }
+                        }}>
                         <ThemedText style={styles.inputText}>
                             {String(value || placeholder || `Select ${label}`)}
                         </ThemedText>
@@ -272,6 +296,9 @@ const styles = StyleSheet.create({
     },
     pickerTrigger: {
         justifyContent: 'center',
+    },
+    disabledInput: {
+        opacity: 0.6,
     },
     modalBackdrop: {
         flex: 1,

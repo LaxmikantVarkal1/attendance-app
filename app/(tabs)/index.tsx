@@ -38,6 +38,7 @@ export default function HomeScreen() {
               key={subject.folderName}
               subjectName={subject.subjectName}
               items={subject.records}
+              onDeleted={loadSubjects}
             />
           ))
         )}

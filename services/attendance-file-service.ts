@@ -4,6 +4,8 @@ export type AttendanceRecord = {
   dateTime: string;
   date: string;
   time: string;
+  from: number;
+  to: number;
   present: number;
   total: number;
   attendanceCount: string;
@@ -13,6 +15,8 @@ export type AttendanceRecord = {
 export type SubjectAttendance = {
   subjectName: string;
   folderName: string;
+  from: number;
+  to: number;
   records: AttendanceRecord[];
 };
 
@@ -31,7 +35,6 @@ const getSubjectPaths = (subjectName: string) => {
   return {
     folderName,
     subjectDir,
-    jsonFile: new File(subjectDir, 'attendance.json'),
     csvFile: new File(subjectDir, 'attendance.csv'),
   };
 };
@@ -42,37 +45,39 @@ const ensureDir = (path: Directory) => {
   }
 };
 
-const readJsonRecords = async (jsonFile: File): Promise<AttendanceRecord[]> => {
-  if (!jsonFile.exists) {
+const readCsvRecords = async (csvFile: File): Promise<AttendanceRecord[]> => {
+  if (!csvFile.exists) {
     return [];
   }
 
   try {
-    const raw = await jsonFile.text();
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
+    const raw = await csvFile.text();
+    const lines = raw
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length <= 1) {
       return [];
     }
 
-    return parsed.map((record) => {
-      const date = typeof record?.date === 'string' ? record.date : '';
-      const time = typeof record?.time === 'string' ? record.time : '00:00';
-      const dateTime =
-        typeof record?.dateTime === 'string' && record.dateTime
-          ? record.dateTime
-          : `${date}T${time}`;
+    return lines.slice(1).map((line) => {
+      const [dateTime = '', date = '', time = '00:00', from = '', to = '', present = '0', total = '0', attendanceCount = '', percentage = '0'] =
+        line.split(',');
+      const parsedTotal = Number(total);
+      const parsedFrom = from !== '' ? Number(from) : 1;
+      const parsedTo = to !== '' ? Number(to) : parsedFrom + parsedTotal - 1;
 
       return {
         dateTime,
         date,
         time,
-        present: Number(record?.present ?? 0),
-        total: Number(record?.total ?? 0),
-        attendanceCount:
-          typeof record?.attendanceCount === 'string'
-            ? record.attendanceCount
-            : `${Number(record?.present ?? 0)}/${Number(record?.total ?? 0)}`,
-        percentage: Number(record?.percentage ?? 0),
+        from: parsedFrom,
+        to: parsedTo,
+        present: Number(present),
+        total: parsedTotal,
+        attendanceCount: attendanceCount || `${Number(present)}/${parsedTotal}`,
+        percentage: Number(percentage),
       };
     });
   } catch {
@@ -80,15 +85,17 @@ const readJsonRecords = async (jsonFile: File): Promise<AttendanceRecord[]> => {
   }
 };
 
-const writeCsv = (csvFile: File, records: AttendanceRecord[]) => {
-  const header = 'dateTime,date,time,present,total,attendanceCount,percentage';
+const writeCsvRecords = (csvFile: File, records: AttendanceRecord[]) => {
+  const header = 'dateTime,date,time,from,to,present,total,attendanceCount,percentage';
   const rows = records.map(
     (record) =>
-      `${record.dateTime},${record.date},${record.time},${record.present},${record.total},${record.attendanceCount},${record.percentage}`
+      `${record.dateTime},${record.date},${record.time},${record.from},${record.to},${record.present},${record.total},${record.attendanceCount},${record.percentage}`
   );
+
   if (!csvFile.exists) {
     csvFile.create({ intermediates: true, overwrite: true });
   }
+
   csvFile.write([header, ...rows].join('\n'));
 };
 
@@ -96,16 +103,18 @@ export const saveAttendanceForSubject = async (input: {
   subjectName: string;
   date: string;
   time: string;
+  from: number;
+  to: number;
   present: number;
   total: number;
 }) => {
-  const { subjectName, date, time, present, total } = input;
-  const { subjectDir, jsonFile, csvFile } = getSubjectPaths(subjectName);
+  const { subjectName, date, time, from, to, present, total } = input;
+  const { subjectDir, csvFile } = getSubjectPaths(subjectName);
 
   ensureDir(SUBJECTS_ROOT);
   ensureDir(subjectDir);
 
-  const records = await readJsonRecords(jsonFile);
+  const records = await readCsvRecords(csvFile);
   const percentage = total > 0 ? Number(((present / total) * 100).toFixed(2)) : 0;
   const dateTime = `${date}T${time}`;
 
@@ -117,6 +126,8 @@ export const saveAttendanceForSubject = async (input: {
     dateTime,
     date,
     time,
+    from,
+    to,
     present,
     total,
     attendanceCount: `${present}/${total}`,
@@ -125,11 +136,7 @@ export const saveAttendanceForSubject = async (input: {
 
   records.push(nextRecord);
   records.sort((a, b) => b.dateTime.localeCompare(a.dateTime));
-  if (!jsonFile.exists) {
-    jsonFile.create({ intermediates: true, overwrite: true });
-  }
-  jsonFile.write(JSON.stringify(records, null, 2));
-  writeCsv(csvFile, records);
+  writeCsvRecords(csvFile, records);
 };
 
 export const attendanceRecordExists = async (input: {
@@ -138,9 +145,49 @@ export const attendanceRecordExists = async (input: {
   time: string;
 }) => {
   const { subjectName, date, time } = input;
-  const { jsonFile } = getSubjectPaths(subjectName);
-  const records = await readJsonRecords(jsonFile);
+  const { csvFile } = getSubjectPaths(subjectName);
+  const records = await readCsvRecords(csvFile);
   return records.some((record) => record.dateTime === `${date}T${time}`);
+};
+
+export const deleteSubjectFile = (subjectName: string) => {
+  const { csvFile } = getSubjectPaths(subjectName);
+  if (csvFile.exists) {
+    csvFile.delete();
+  }
+};
+
+export const deleteAttendanceRecord = async (input: {
+  subjectName: string;
+  dateTime: string;
+}) => {
+  const { subjectName, dateTime } = input;
+  const { csvFile } = getSubjectPaths(subjectName);
+
+  if (!csvFile.exists) {
+    return;
+  }
+
+  const records = await readCsvRecords(csvFile);
+  const nextRecords = records.filter((record) => record.dateTime !== dateTime);
+
+  if (nextRecords.length === records.length) {
+    return;
+  }
+
+  if (nextRecords.length === 0) {
+    csvFile.delete();
+    return;
+  }
+
+  writeCsvRecords(csvFile, nextRecords);
+};
+
+export const deleteSubjectFolder = (subjectName: string) => {
+  const { subjectDir } = getSubjectPaths(subjectName);
+  if (subjectDir.exists) {
+    subjectDir.delete();
+  }
 };
 
 export const loadAllSubjectsAttendance = async (): Promise<SubjectAttendance[]> => {
@@ -150,11 +197,13 @@ export const loadAllSubjectsAttendance = async (): Promise<SubjectAttendance[]> 
   const subjects = await Promise.all(
     entries.map(async (subjectDir) => {
       const folderName = subjectDir.name;
-      const records = await readJsonRecords(new File(subjectDir, 'attendance.json'));
+      const records = await readCsvRecords(new File(subjectDir, 'attendance.csv'));
 
       return {
         subjectName: folderName.replace(/_/g, ' '),
         folderName,
+        from: records[0]?.from ?? 1,
+        to: records[0]?.to ?? (records[0]?.total ?? 0),
         records,
       };
     })

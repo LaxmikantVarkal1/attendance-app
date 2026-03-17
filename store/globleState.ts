@@ -7,6 +7,7 @@ interface FormData {
     to: number;
     date: string;
     time: string;
+    subjectRangeLocked: boolean;
 }
 
 interface formStore {
@@ -67,6 +68,7 @@ const useFormData = create<formStore>((set, get) => ({
     formData: {
         date: getTodayDate(),
         time: getCurrentTime(),
+        subjectRangeLocked: false,
     },
     listData: { obj: {}, list: [] },
     updateForm: (name, value) => {

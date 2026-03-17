@@ -11,7 +11,12 @@ export function Collapsible({
   children,
   title,
   icon,
-}: PropsWithChildren & { title: string; icon?: ReactNode }) {
+  onLongPress,
+}: PropsWithChildren & {
+  title: string;
+  icon?: ReactNode;
+  onLongPress?: () => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useColorScheme() ?? 'light';
 
@@ -20,6 +25,7 @@ export function Collapsible({
       <TouchableOpacity
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
+        onLongPress={onLongPress}
         activeOpacity={0.8}>
         <IconSymbol
           name="chevron.right"
@@ -42,6 +48,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
   },
   content: {
     marginTop: 6,
