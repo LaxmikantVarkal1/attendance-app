@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
 
-2. Start the app
 
-   ```bash
-   npx expo start
-   ```
 
-In the output, you'll find options to open the app in a
+# Offline Attendance System
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+A high-performance, mobile-first application designed for reliable attendance tracking in environments with limited or no internet connectivity. This project prioritizes data integrity, local persistence, and precise statistical reporting.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🚀 Key Features
 
-When you're ready, run:
+* **Offline-First Sync:** Record attendance locally; data automatically synchronizes when a network connection is restored.
+* **Precise Analytics:** Built-in logic for calculating attendance percentages and totals, restricted to two decimal places for professional reporting.
+* **Modular Architecture:** Uses a clean separation of concerns for global and component-level state management.
+* **Native Performance:** Optimized UI components using native view managers for a smooth user experience.
+* **Data Export:** Capability to generate and export attendance logs for administrative use.
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🛠 Tech Stack
 
-## Learn more
+| Category | Technology |
+| :--- | :--- |
+| **Framework** | Expo / React Native |
+| **State Management** | Zustand |
+| **Styling** | Native Flexbox & Expo UI Properties |
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📊 Core Logic
 
-## Join the community
+The application ensures statistical accuracy using standardized formulas. For any given reporting period:
 
-Join our community of developers creating universal apps.
+$$Total\ Attendance = \sum (\text{Present Sessions})$$
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+$$Percentage = \left( \frac{\text{Total Attendance}}{\text{Total Sessions}} \right) \times 100$$
+
+*Note: All numerical outputs are rounded to two decimal places to maintain data consistency.*
+
+---
+
+
