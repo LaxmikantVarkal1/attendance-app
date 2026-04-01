@@ -31,16 +31,3 @@ A high-performance, mobile-first application designed for reliable attendance tr
 
 ---
 
-## 📊 Core Logic
-
-The application ensures statistical accuracy using standardized formulas. For any given reporting period:
-
-$$Total\ Attendance = \sum (\text{Present Sessions})$$
-
-$$Percentage = \left( \frac{\text{Total Attendance}}{\text{Total Sessions}} \right) \times 100$$
-
-*Note: All numerical outputs are rounded to two decimal places to maintain data consistency.*
-
----
-
-
